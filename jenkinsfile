@@ -1,0 +1,27 @@
+node
+{
+def mavenHome = tool name: "maven 3.8.4"
+stage ('github pulling')
+{
+git branch: 'main', url: 'https://github.com/ushanbasu/newpracticerepeat.git'
+}
+stage ('build')
+{
+sh "${mavenHome}/bin/mvn clean package"
+}
+stage ('sonarqube')
+{
+sh "${mavenHome}/bin/mvn clean sonar:sonar"
+}
+stage ('nexus')
+{
+sh "${mavenHome}/bin/mvn clean sonar:sonar deploy"
+}
+stage ('tomcat deploy')
+{
+sshagent(['d8eadc73-5b4a-40b5-b9f8-e3336db3efe9'])
+{
+  sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@52.66.31.200:/opt/apache-tomcat-9.0.56/webapps"  
+}
+}
+}
